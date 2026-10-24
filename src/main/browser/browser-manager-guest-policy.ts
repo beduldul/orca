@@ -6,7 +6,7 @@ import {
 import { BrowserManagerGuestCleanup } from './browser-manager-guest-cleanup'
 import { allowPageUnload } from './browser-guest-unload-policy'
 import { installDocPreviewGuestPolicy } from './doc-preview-guest-policy'
-import { installGuestDevToolsWindowBehavior } from './browser-guest-devtools-window'
+import { installGuestDevToolsCloseShortcut } from './browser-guest-devtools-close-shortcut'
 
 export abstract class BrowserManagerGuestPolicy extends BrowserManagerGuestCleanup {
   attachGuestPolicies(
@@ -40,14 +40,9 @@ export abstract class BrowserManagerGuestPolicy extends BrowserManagerGuestClean
       }
     }
     guest.on('audio-state-changed', forwardAudioState)
-    const disposeDevToolsWindow = installGuestDevToolsWindowBehavior({
+    const disposeDevToolsCloseShortcut = installGuestDevToolsCloseShortcut({
       guest,
       getKeybindings: () => this.settingsResolver?.().keybindings,
-      isViewportEmulated: () => {
-        const tabId = this.tabIdByWebContentsId.get(guest.id)
-        return tabId !== undefined && this.isViewportPresetActive(tabId, guest.id)
-      },
-      isDocked: () => this.devToolsDock.isDocked(guest.id),
       closeDevTools: () => this.closeGuestDevTools(guest)
     })
 
@@ -55,7 +50,7 @@ export abstract class BrowserManagerGuestPolicy extends BrowserManagerGuestClean
       disposeDetachTracking()
       disposePopupPolicy()
       disposeNavigationPolicy()
-      disposeDevToolsWindow()
+      disposeDevToolsCloseShortcut()
       if (!guest.isDestroyed()) {
         guest.off('audio-state-changed', forwardAudioState)
       }
