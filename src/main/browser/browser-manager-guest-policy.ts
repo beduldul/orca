@@ -46,7 +46,9 @@ export abstract class BrowserManagerGuestPolicy extends BrowserManagerGuestClean
       isViewportEmulated: () => {
         const tabId = this.tabIdByWebContentsId.get(guest.id)
         return tabId !== undefined && this.isViewportPresetActive(tabId, guest.id)
-      }
+      },
+      isDocked: () => this.devToolsDock.isDocked(guest.id),
+      closeDevTools: () => this.closeGuestDevTools(guest)
     })
 
     this.policyCleanupByGuestId.set(guest.id, () => {
@@ -57,6 +59,8 @@ export abstract class BrowserManagerGuestPolicy extends BrowserManagerGuestClean
       if (!guest.isDestroyed()) {
         guest.off('audio-state-changed', forwardAudioState)
       }
+      // A docked host outliving its guest would stay painted over the pane.
+      this.devToolsDock.close(guest.id)
     })
   }
 
@@ -65,6 +69,15 @@ export abstract class BrowserManagerGuestPolicy extends BrowserManagerGuestClean
       browserPageId,
       audible
     })
+  }
+
+  /** Closes the page's DevTools wherever they are: docked in the pane or in their own window. */
+  protected closeGuestDevTools(guest: Electron.WebContents): void {
+    if (this.devToolsDock.isDocked(guest.id)) {
+      this.devToolsDock.close(guest.id)
+    } else if (!guest.isDestroyed()) {
+      guest.closeDevTools()
+    }
   }
 
   /** Document guests share teardown without installing browsing navigation or popup policies. */
