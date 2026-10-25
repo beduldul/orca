@@ -18,6 +18,8 @@ import type { BrowserPagePromptRequest } from '../../shared/browser-page-prompt'
 import type { BrowserSitePermission } from '../../shared/browser-site-permission'
 import { BROWSER_PAGE_PROMPT_TIMEOUT_MS, respondToBrowserPagePrompt } from './browser-page-prompts'
 import {
+  answerBrowserLocalNetworkCheck,
+  browserSitePermissionsFor,
   decideBrowserSitePermissions,
   isBrowserSitePermissionAllowed,
   savedBrowserSitePermissions,
@@ -227,6 +229,33 @@ describe('browser site permission prompts', () => {
       false
     )
     expect(sentRequests(renderer)).toHaveLength(2)
+  })
+
+  it('asks when a page checks local network access, since Electron never requests it', async () => {
+    const memory = savedBrowserSitePermissions('default')
+    const check = (guest: MockGuest): boolean =>
+      answerBrowserLocalNetworkCheck({
+        requester: guest,
+        source: { pageUrl: guest.getURL(), frameOrigin: guest.getURL() },
+        memory
+      })
+    const signIn = mockGuest('https://login.example.com/signin')
+    for (const name of ['loopback-network', 'local-network', 'local-network-access']) {
+      expect(browserSitePermissionsFor(name, undefined)).toEqual(['local-network'])
+    }
+
+    expect(check(signIn)).toBe(false)
+    expect(check(signIn)).toBe(false)
+    expect(sentRequests(renderer)).toMatchObject([
+      { details: { origin: 'https://login.example.com', permissions: ['local-network'] } }
+    ])
+    await answerLatest('allow')
+    expect(check(signIn)).toBe(true)
+
+    // Chrome never gates loopback pages, so localhost dev servers neither ask nor read denied.
+    expect(check(mockGuest('http://localhost:5173/'))).toBe(true)
+    expect(check(mockGuest('http://127.0.0.1:8080/'))).toBe(true)
+    expect(sentRequests(renderer)).toHaveLength(1)
   })
 
   it('asks for a local file, and every local file shares the answer', async () => {
