@@ -57,6 +57,12 @@ describe.skipIf(process.platform === 'win32')('createInstallPluginsHandler (gues
       expect(readFileSync(join(config, 'keybindings.json'), 'utf8')).toBe('{"bindings": []}')
     })
   })
+  function requireOverlayDir(dir: string | undefined): string {
+    if (typeof dir !== 'string') {
+      throw new Error('expected the handler to return an overlay dir')
+    }
+    return dir
+  }
 
   it('writes orca-opencode-status.js into the overlay and returns that dir', () => {
     withHome((home) => {
@@ -70,8 +76,7 @@ describe.skipIf(process.platform === 'win32')('createInstallPluginsHandler (gues
       expect(res.installed.opencode).toBe(true)
       const dir = res.overlayDirs.opencode
       expect(typeof dir).toBe('string')
-      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: Runtime validation or the local test fixture establishes the asserted shape.
-      const pluginPath = join(dir as string, 'plugins', 'orca-opencode-status.js')
+      const pluginPath = join(requireOverlayDir(dir), 'plugins', 'orca-opencode-status.js')
       expect(existsSync(pluginPath)).toBe(true)
       expect(readFileSync(pluginPath, 'utf8')).toBe(source)
     })
@@ -102,10 +107,9 @@ describe.skipIf(process.platform === 'win32')('createInstallPluginsHandler (gues
       const dir = res.overlayDirs.opencode2
       expect(res.installed.opencode2).toBe(true)
       expect(typeof dir).toBe('string')
-      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: Runtime validation or the local test fixture establishes the asserted shape.
-      expect(readFileSync(join(dir as string, 'plugins', 'orca-opencode2-status.js'), 'utf8')).toBe(
-        source
-      )
+      expect(
+        readFileSync(join(requireOverlayDir(dir), 'plugins', 'orca-opencode2-status.js'), 'utf8')
+      ).toBe(source)
       expect(res.overlayDirs.opencode).toBeUndefined()
     })
   })
@@ -117,8 +121,7 @@ describe.skipIf(process.platform === 'win32')('createInstallPluginsHandler (gues
         ORCA_WSL_HOOK_INSTANCE: 'inst1'
       })
       const source = '// v1\n'
-      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: Runtime validation or the local test fixture establishes the asserted shape.
-      const dir = install({ opencodePluginSource: source }).overlayDirs.opencode as string
+      const dir = requireOverlayDir(install({ opencodePluginSource: source }).overlayDirs.opencode)
 
       // Why: a wipe-and-rebuild would delete this alongside the rest of the tree,
       // pulling the config root out from under an agent already running against it.
@@ -147,8 +150,7 @@ describe.skipIf(process.platform === 'win32')('createInstallPluginsHandler (gues
       writeFileSync(join(userConfig, 'opencode.json'), '{"model":"late"}')
       env.ORCA_OPENCODE_SOURCE_CONFIG_DIR = userConfig
 
-      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: Runtime validation or the local test fixture establishes the asserted shape.
-      const dir = install({ opencodePluginSource: source }).overlayDirs.opencode as string
+      const dir = requireOverlayDir(install({ opencodePluginSource: source }).overlayDirs.opencode)
       expect(readFileSync(join(dir, 'opencode.json'), 'utf8')).toBe('{"model":"late"}')
     })
   })
@@ -160,8 +162,7 @@ describe.skipIf(process.platform === 'win32')('createInstallPluginsHandler (gues
         ORCA_WSL_HOOK_INSTANCE: 'inst1'
       })
       const source = '// v1\n'
-      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: Runtime validation or the local test fixture establishes the asserted shape.
-      const dir = install({ opencodePluginSource: source }).overlayDirs.opencode as string
+      const dir = requireOverlayDir(install({ opencodePluginSource: source }).overlayDirs.opencode)
       // Why: a rebuild that failed after the wipe leaves the dir but not the plugin;
       // an existsSync on the dir alone would call that a cache hit forever.
       rmSync(join(dir, 'plugins', 'orca-opencode-status.js'))
@@ -179,8 +180,9 @@ describe.skipIf(process.platform === 'win32')('createInstallPluginsHandler (gues
       })
       install({ opencodePluginSource: '// v1\n' })
       // Why: a mid-session Orca upgrade ships new plugin source; future spawns must see it.
-      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: Runtime validation or the local test fixture establishes the asserted shape.
-      const dir = install({ opencodePluginSource: '// v2\n' }).overlayDirs.opencode as string
+      const dir = requireOverlayDir(
+        install({ opencodePluginSource: '// v2\n' }).overlayDirs.opencode
+      )
       expect(readFileSync(join(dir, 'plugins', 'orca-opencode-status.js'), 'utf8')).toBe('// v2\n')
     })
   })
@@ -192,8 +194,7 @@ describe.skipIf(process.platform === 'win32')('createInstallPluginsHandler (gues
         ORCA_WSL_HOOK_INSTANCE: 'inst1'
       })
       const source = '// v1\n'
-      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: Runtime validation or the local test fixture establishes the asserted shape.
-      const dir = install({ opencodePluginSource: source }).overlayDirs.opencode as string
+      const dir = requireOverlayDir(install({ opencodePluginSource: source }).overlayDirs.opencode)
       rmSync(dir, { recursive: true, force: true })
 
       expect(install({ opencodePluginSource: source }).overlayDirs.opencode).toBe(dir)
@@ -213,8 +214,9 @@ describe.skipIf(process.platform === 'win32')('createInstallPluginsHandler (gues
         ORCA_OPENCODE_SOURCE_CONFIG_DIR: userConfig,
         ORCA_WSL_HOOK_INSTANCE: 'inst1'
       })
-      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: Runtime validation or the local test fixture establishes the asserted shape.
-      const dir = install({ opencodePluginSource: '// v1\n' }).overlayDirs.opencode as string
+      const dir = requireOverlayDir(
+        install({ opencodePluginSource: '// v1\n' }).overlayDirs.opencode
+      )
 
       expect(readFileSync(join(dir, 'opencode.json'), 'utf8')).toBe('{"model":"user-set"}')
       expect(existsSync(join(dir, 'plugins', 'orca-opencode-status.js'))).toBe(true)
@@ -232,8 +234,9 @@ describe.skipIf(process.platform === 'win32')('createInstallPluginsHandler (gues
         HOME: home,
         ORCA_WSL_HOOK_INSTANCE: 'inst1'
       })
-      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: Runtime validation or the local test fixture establishes the asserted shape.
-      const dir = install({ opencodePluginSource: '// v1\n' }).overlayDirs.opencode as string
+      const dir = requireOverlayDir(
+        install({ opencodePluginSource: '// v1\n' }).overlayDirs.opencode
+      )
 
       expect(existsSync(join(dir, 'opencode.json'))).toBe(true)
       expect(existsSync(join(dir, 'plugins', 'orca-opencode-status.js'))).toBe(true)
