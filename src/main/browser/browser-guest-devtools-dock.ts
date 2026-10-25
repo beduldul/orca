@@ -117,7 +117,9 @@ export class BrowserGuestDevToolsDock {
       return null
     }
     const host = dock.view.webContents
-    const image = snapshot && host && dock.view.getVisible() ? await host.capturePage() : null
+    // A host destroyed mid-capture rejects; hide anyway, without a snapshot.
+    const image =
+      snapshot && host && dock.view.getVisible() ? await host.capturePage().catch(() => null) : null
     if (dock.boundsGeneration === generation) {
       dock.view.setVisible(false)
     }
