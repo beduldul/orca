@@ -63,6 +63,7 @@ export class RuntimeClientSettingsController {
       agentDefaultArgs: launchProfile.agentDefaultArgs,
       agentDefaultEnv: launchProfile.agentDefaultEnv,
       agentStatusHooksEnabled: settings.agentStatusHooksEnabled !== false,
+      claudeSubagentNavigationEnabled: settings.claudeSubagentNavigationEnabled === true,
       // Why projected: mobile's terminal Copy honours this, and a host predating
       // the setting sends no key, which the client reads as on (#19770).
       terminalCopyTrimsGutter: settings.terminalCopyTrimsGutter !== false,

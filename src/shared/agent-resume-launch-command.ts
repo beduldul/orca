@@ -29,7 +29,10 @@ function isClaudeExecutableToken(token: string): boolean {
  * wrapper's `--`, behind PowerShell's `&` call operator, or preceded solely by
  * NAME=value assignments — so an argument that merely ends in /claude (an ssh
  * key, a project dir) can never be mistaken for the executable. */
-function findClaudeExecutableIndex(tokens: readonly string[], shell: AgentStartupShell): number {
+export function findClaudeExecutableIndex(
+  tokens: readonly string[],
+  shell: AgentStartupShell
+): number {
   let commandPosition = true
   for (let i = 0; i < tokens.length; i += 1) {
     const token = tokens[i]
