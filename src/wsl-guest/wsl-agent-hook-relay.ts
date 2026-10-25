@@ -11,6 +11,7 @@
 // stale Windows-side hook posts — so unlike the SSH relay there is no grace
 // period and no daemon socket.
 import { AGENT_HOOK_INFER_INTERRUPT_METHOD } from '../shared/agent-hook-interrupt-reconciliation'
+import { CLAUDE_AGENT_VIEW_RELAY_METHOD } from '../shared/claude-agent-view'
 import { homedir } from 'node:os'
 
 import { RELAY_SENTINEL } from './protocol'
@@ -69,6 +70,8 @@ async function main(): Promise<void> {
     endpointDir: wslHookRelayEndpointDir(homedir(), instanceKey),
     token,
     preferredPort: windowsPort,
+    forwardClaudeAgentView: (body) =>
+      dispatcher.requestPrimary(CLAUDE_AGENT_VIEW_RELAY_METHOD, { body }, { timeoutMs: 1000 }),
     forward: (envelope) => publishAgentHookEnvelope(dispatcher, envelope)
   })
   dispatcher.onRequest(AGENT_HOOK_INFER_INTERRUPT_METHOD, async (params) => ({

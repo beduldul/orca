@@ -6,6 +6,7 @@ import type { DashboardAgentRow as DashboardAgentRowData } from '@/components/da
 import { AgentTypeIcon } from '@/lib/agent-type-icon'
 import { formatAgentTypeLabel } from '@/lib/agent-status'
 import { cn } from '@/lib/utils'
+import { viewClaudeAgentFromRow } from '@/lib/claude-agent-row-view'
 import { getAgentDotState } from './worktree-card-agent-summary'
 import { getAgentRowPrimaryText } from '../../../../shared/agent-row-primary-text'
 import { formatAgentToolPreview } from '@/lib/agent-row-tool-preview'
@@ -165,11 +166,10 @@ export const CompactAgentRow = React.memo(function CompactAgentRow({
   const handleActivate = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation()
-      // Why: subagent child rows have no pane of their own; they focus the
-      // parent pane whose session spawned them.
       onActivate(agent.tab.id, agent.activationPaneKey ?? agent.paneKey)
+      void viewClaudeAgentFromRow(agent)
     },
-    [agent.activationPaneKey, agent.paneKey, agent.tab.id, onActivate]
+    [agent, onActivate]
   )
   const handleSendTargetClickCapture = useCallback(
     (e: React.MouseEvent) => {

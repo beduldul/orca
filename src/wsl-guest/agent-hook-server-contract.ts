@@ -17,6 +17,7 @@ export type RelayHookServerOptions = {
   preferredPort?: number
   forwardUnavailable?: (envelope: AgentHookUnavailableEnvelope) => void
   forward: RelayHookForward
+  forwardClaudeAgentView?: (body: unknown) => Promise<unknown>
   /**
    * True when the host has been told this pane's tab is gone and no PTY has re-bound the paneKey.
    * Posts from such a pane come from a process the user already closed, so they describe no surface
