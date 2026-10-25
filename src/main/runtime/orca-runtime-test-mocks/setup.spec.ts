@@ -18,6 +18,7 @@ vi.mock('../../claude/agent-view-service', () => ({
   getClaudeAgentViewService: () => ({
     reconcile: reconcileClaudeAgentViewMock,
     ready: async () => {},
+    readyForLaunch: async () => {},
     prepareProfile: async () => {},
     read: () => undefined
   })
